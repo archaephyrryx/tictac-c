@@ -1,59 +1,132 @@
-#include "engine.h"
-#include "subgame.h"
-#include "node.h"
-#include "move.h"
-#include "state.h"
-#include "canon.h"
+#include <stdlib.h>
+#include <stdio.h>
 
-int main(int argc, char *argv[])
+#include "err.h"
+#include "node.h"
+
+static int seen[27 * 27 * 27];
+
+typedef int subBoard[9];
+static subBoard root;
+
+static int stakes(int a, int b, int c, int p) {
+
+    /*
+     * For three positions along a win-vector, the sum of the pair-wise
+     * products of their values is negative if two positions have opposite
+     * values (+1 and -1). If all values are 0 or a single player value,
+     * then this evaluation is greater than or equal to 0.
+     */
+    if (((a * b + b * c + c * a) >= 0) && ((p * (a + b + c)) >= 0))
+      return p * (a + b + c);
+    return -1;
+}
+ 
+void winWays(subBoard state, int player, int *ways)
 {
-  Table_T termtable = Table_new(SUBBOARDS, boardcmp, boardhash);
-  subBoard root = subboardalloc(0);
-  terminalTable(termtable, root);
-  return 0;
+#define docount(i, j, k) do { \
+	int _s = stakes(state[i], state[j], state[k], player); \
+	if (_s >= 0) \
+	    ++ways[_s]; \
+    } while (0)
+
+    /*
+     * Counts the number of win vectors that a player owns a certain number of
+     * positions along
+     */
+    docount(0, 1, 2);
+    docount(0, 3, 6);
+    docount(0, 4, 8);
+    docount(1, 4, 7);
+    docount(2, 4, 6);
+    docount(2, 5, 8);
+    docount(3, 4, 5);
+    docount(6, 7, 8);
 }
 
-terminal *terminalTable(Table_T termtable, subBoard state)
+int whowon(subBoard state)
 {
-  int player;
-  int i;
-  int w;
-  terminal *terms;
+    int i;
 
-  if ((terms = Table_get(termtable, state)) != 0) {
-    return terms;
-  }
-  state = subboardalloc(state);
+    /*
+     * We cycle through all winning lines on the board. As the values at
+     * those positions are either 1, 0, or -1, any potential winning triplet
+     * must hold the same values. a*(a+b+c) == 3 iff a, b, c are all equal
+     * and non-zero.
+     */
 
-  terms = (terminal *) calloc(1, sizeof(terminal));
+    /* Diagonal winner */
+    if (state[4] * (state[0] + state[4] + state[8]) == 3 ||
+	state[4] * (state[2] + state[4] + state[6]) == 3)
+	return state[4];
 
-  if ((w = win(state)) != 0) {
-    terms->max = (w == 1);
-    terms->min = (w == -1);
-  } else if (countOpen(state) == 0) {
-    terms->max = 0;
-    terms->min = 0;
-  } else {
-    int childState[9];
-    memcpy(childState, state, 9*sizeof(int));
+    for (i = 0; i < 3; ++i) { 
+	int sum;
+	int j;
 
-    for (i = 0; i < 9; ++i) {
-      if (childState[i] == 0) {
-	for (player = 0; player < 2; ++player) {
-	  childState[i] = (2*player) - 1;
-	  terminal *childterm = terminalTable(termtable, childState);
-	  terms->max += childterm->max;
-	  terms->min += childterm->min;
-	}
-	childState[i] = 0;
-      }
+	/* Vertical winner */
+	for (sum = j = 0; j < 3; ++j)
+	    sum += state[3*j+i];
+	if (state[i]*sum == 3)
+	    return state[i];
+
+	/* Horizontal winner */
+	for (sum = j = 0; j < 3; ++j)
+	    sum += state[3*i+j];
+	if (state[3*i]*sum == 3)
+	    return state[3*i];
     }
-  }
-  Table_put(termtable, state, terms);
-  printf("%d %d", terms->max, terms->min);
-  for (i = 0; i < 9; ++i) {
-    printf(" %d", state[i]);
-  }
-  putchar('\n');
-  return terms;
-} 
+
+    return 0;
+}
+
+static void genboards(subBoard root, int hash, int depth, int adv)
+{
+    int w;
+    int p;
+    int i;
+
+    if (seen[hash])
+	return;
+    seen[hash] = 1;
+    subinfo[hash].adv = adv;
+
+    if ((w = subinfo[hash].win = whowon(root)) != 0) {
+	subinfo[hash].done = 1;
+	subinfo[hash].max = (w == 1);
+	subinfo[hash].min = (w == -1);
+    } else if (depth == 9) {
+	subinfo[hash].done = 1;
+	subinfo[hash].max = subinfo[hash].min = 0;
+    } else {
+	for (i = 0; i < 9; ++i) {
+	    if (root[i] != 0)
+		continue;
+	    for (p = 0; p < 2; ++p) {
+		int chash = hash + (p + 1) * pow3[i];
+		root[i] = (p << 1) - 1;
+		genboards(root, chash, depth + 1, adv + root[i]);
+		subinfo[hash].max += subinfo[chash].max;
+		subinfo[hash].min += subinfo[chash].min;
+	    }
+	    root[i] = 0;
+	}
+    }
+    printf("%d %d %d %d %d", hash,
+	   subinfo[hash].done, subinfo[hash].win,
+	   subinfo[hash].max, subinfo[hash].min);
+    for (p = 0; p < 2; ++p) {
+	winWays(root, (p << 1) - 1, subinfo[hash].ways[p]);
+    	for (i = 0; i < 4; ++i)
+	    printf(" %d", subinfo[hash].ways[p][i]);
+    }
+    putchar('\n');
+}
+
+int main(int argc, const char *argv[])
+{
+    if (argc > 0)
+	progname = argv[0];
+    genboards(root, 0, 0, 0);
+    return EXIT_SUCCESS;
+}

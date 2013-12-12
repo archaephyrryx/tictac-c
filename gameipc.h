@@ -1,7 +1,9 @@
-#ifndef COMMS_H
-#define COMMS_H
-extern void invite(const char *name);
-extern void join(const char *name);
+#ifndef GAMEIPC_H
+#define GAMEIPC_H
+
+extern int ipcrole(void);
+extern int ipcdone(void);
 extern int receiveMove(void);
 extern void sendMove(int move);
+
 #endif

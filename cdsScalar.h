@@ -1,7 +1,9 @@
-#ifndef UNIFORM_H
-#define UNIFORM_H
-#include "engine.h"
-extern int weight[3];
-extern int threshold;
+#ifndef CDSSCALAR_H
+#define CDSSCALAR_H
+
+#include "node.h"
+
 extern int cdsScalar(bNode *, int);
+extern void cdsScalarInit(const char *);
+
 #endif

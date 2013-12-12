@@ -1,7 +1,9 @@
-#ifndef GAUSS_H
-#define GAUSS_H
-#include "engine.h"
-extern int weight[3];
-extern int threshold;
+#ifndef CDSSIGMA_H
+#define CDSSIGMA_H
+
+#include "node.h"
+
 extern int cdsSigma(bNode *, int);
+extern void cdsSigmaInit(const char *);
+
 #endif
