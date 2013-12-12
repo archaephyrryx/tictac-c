@@ -10,7 +10,6 @@
 
 static int mean[3];
 static int stddev[3];
-static int scale[3];
 
 static int moddist(int x, int y)
 {
@@ -40,12 +39,13 @@ void cdsSigmaInit(const char *confpath)
     if (fgets(buf, sizeof(buf), conffile) == NULL)
     	fatal("cdsSigmaInit: %s: fgets() EOF", confpath);
 
-    n = sscanf(buf, "%d %d %d %d %d %d %d %d %d",
-	       &mean[0], &stddev[0], &scale[0],
-	       &mean[1], &stddev[1], &scale[1],
-	       &mean[2], &stddev[2], &scale[2]);
-    if (n != 9)
-    	fatal("cdsSigmaInit: %s: expected 9 parameters: got %d", confpath, n);
+    n = sscanf(buf, "%d %d %d %d %d %d %d %d %d %d",
+	       &mean[0], &stddev[0],
+	       &mean[1], &stddev[1],
+	       &mean[2], &stddev[2],
+               &threshold, &weight[0], &weight[1], &weight[2]);
+    if (n != 10)
+    	fatal("cdsSigmaInit: %s: expected 10 parameters: got %d", confpath, n);
 
     (void) fclose(conffile);
 }
@@ -63,9 +63,9 @@ int cdsSigma(bNode *root, int depth)
     int sweight;
     int heuristic;
 
-    dweight = (int) (scale[0] * gauss(root->depth, mean[0], stddev[0]));
-    cweight = (int) (scale[1] * gauss(root->depth, mean[1], stddev[1]));
-    sweight = (int) (scale[2] * gauss(root->depth, mean[2], stddev[2]));
+    dweight = (int) (10000 * gauss(root->depth, mean[0], stddev[0]));
+    cweight = (int) (10000 * gauss(root->depth, mean[1], stddev[1]));
+    sweight = (int) (10000 * gauss(root->depth, mean[2], stddev[2]));
 
     heuristic = random() % (dweight + cweight + sweight); 
 

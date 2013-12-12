@@ -9,6 +9,8 @@
 #include "node.h"
 #include "gameipc.h"
 #include "cdsSigma.h"
+#include "cdsBounded.h"
+#include "fullRandom.h"
 
 typedef struct {
   const char *name;
@@ -18,6 +20,8 @@ typedef struct {
 
 tentry tactics[] = {
   {"cdsSigma", cdsSigma, cdsSigmaInit},
+  {"cdsBounded", cdsBounded, cdsBoundedInit},
+  {"fullRandom", fullRandom, fullRandomInit},
   {0, 0}
 };
 
@@ -36,7 +40,7 @@ int main(int argc, const char *argv[])
     bNode *root;
     const char *tname;
     const char *confpath;
-    tentry *t = NULL;
+    tentry *t;
     int done;
     int win;
     int initplayer;
@@ -81,10 +85,6 @@ int main(int argc, const char *argv[])
     	t->init(confpath);
     }
 
-    if (initplayer != 1 && initplayer != -1) {
-        fatal("no init-player provided");
-    }
-
     if (argc > 0) {
 	report = atoi(*argv++); --argc;
     } else {
@@ -112,9 +112,14 @@ int main(int argc, const char *argv[])
 		choice = t->func(root, lookahead);
 		sendMove(choice);
 	    } else {
-		choice = receiveMove(root);
+		choice = receiveMove();
 	    }
 	    next = bNodeFree(root, choice);
+
+	    if (initplayer == 1 && report > 1) {
+	    	printf("%d:%d\n", choice/9, choice % 9);
+		printNode(next);
+	    }
 
 	    if ((done = next->boards[10] == 27 * 27 * 27 - 1) == 0)
 	      done = win = subinfo[next->boards[9]].win;
@@ -125,7 +130,8 @@ int main(int argc, const char *argv[])
 	if (initplayer == 1)
 	    ++stats[win ? win + 1 : 1];
     }
-    if (initplayer == 1 && report >= 1) {
+
+    if (initplayer == 1 && report) {
     	if (repeat > 1) {
 	    printf("l %d\n", stats[0]);
 	    printf("d %d\n", stats[1]);

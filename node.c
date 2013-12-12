@@ -125,7 +125,7 @@ bNode *bNodeAlloc(bNode *parent, int loc)
     return new;
 }
 
-static void mNodeAlloc(bNode *root, int loc)
+static mNode *mNodeAlloc(bNode *root, int loc)
 {
     mNode *m = xmalloc(sizeof(mNode));
 
@@ -133,6 +133,8 @@ static void mNodeAlloc(bNode *root, int loc)
     m->next = root->moves;
     root->moves = m;
     m->child = bNodeAlloc(root, loc);
+
+    return m;
 }
 
 void addMissing(bNode *root)
@@ -153,6 +155,7 @@ void addMissing(bNode *root)
     	register int i = loc >> 6;
 	register int j = loc & 0x3f;
 	uint64_t bit = one << j;
+	mNode *m;
 
 	/*
 	 * Dont't generate duplicate moves or go to occupied positions and
@@ -163,7 +166,7 @@ void addMissing(bNode *root)
 	    continue;
 
 	root->movemask[i] |= bit;
-	mNodeAlloc(root, loc);
+	m = mNodeAlloc(root, loc);
     }
 }
 

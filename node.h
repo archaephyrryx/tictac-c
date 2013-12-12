@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef struct bNode {
+typedef struct node {
     struct mNode *moves;
     uint64_t movemask[2];
     uint64_t usedmask[2];
@@ -15,7 +15,7 @@ typedef struct bNode {
 
 typedef struct mNode {
     int loc;
-    struct bNode *child;
+    struct node *child;
     struct mNode *next;
 } mNode;
 
