@@ -24,7 +24,7 @@ mNode *mNodealloc(void)
   return node;
 }
 
-static mNode **gather(bNode *root, size_t *nelem)
+static mNode **gather(bNode *root, int *nelem)
 {
   mNode *mchoice;
   int moves = 0;
@@ -39,7 +39,7 @@ static mNode **gather(bNode *root, size_t *nelem)
   for (i = 0, mchoice = root->choices; mchoice; mchoice = mchoice->next) {
     mlist[i++] = mchoice; 
   }
-  *nelem = moves;
+  *nelem = i;
   return mlist;
 }
 
@@ -129,7 +129,7 @@ static int minmovecmp(const void *a, const void *b)
 void sortMoves(bNode *root)
 {
   int i;
-  size_t nelem;
+  int nelem;
   mNode **moves = gather(root, &nelem);
   
   if (PLAYDEP(root->depth) == 1) {
@@ -147,6 +147,17 @@ void sortMoves(bNode *root)
     root->choices = mchoice;
   }
   free(moves);
+}
+
+int randomMove(bNode *root)
+{
+  int nelem;
+  mNode **moves = gather(root, &nelem);
+  int which = (int) (random() % nelem);
+  int loc = moves[which]->loc;
+
+  free(moves);
+  return loc;
 }
 
 

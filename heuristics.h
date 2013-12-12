@@ -11,4 +11,5 @@ int calculating(bNode *, int);
 int dominating(bNode *, int);
 int randomizer(bNode *, int);
 int nullius(bNode *, int);
+int gauss(int, int, int);
 #endif

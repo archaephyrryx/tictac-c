@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include <time.h>
 #include <math.h>
 #include <stdlib.h>
@@ -52,4 +53,3 @@ typedef struct morphism {
   int rotation;
   int reflection;
 } morphism;
-

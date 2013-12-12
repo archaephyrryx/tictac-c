@@ -2,6 +2,7 @@
 #include "heuristics.h"
 #include "subgame.h"
 #include "super.h"
+#include "node.h"
 
 int null(bNode *root) {
   return (root->depth % 2) ? POSINFTY : NEGINFTY;
@@ -9,7 +10,7 @@ int null(bNode *root) {
 
 int terminalDifference(subBoard state) {
   terminal *terms = Table_get(termtable, canonBoard(state));
-  return (terms->max - terms->min);
+  return (terms->max + terms->min) ? (100 * (terms->max - terms->min))/(terms->max + terms->min) : 0;
 }
 
 int advantage(bNode *root)
@@ -144,8 +145,8 @@ int dominating(bNode *root, int depth)
 
 int nullius(bNode *root, int depth)
 {
-  root->hValue = alphabeta(NEGINFTY, POSINFTY, depth, root, null);
-  return randomOptimal(root);
+  addMissing(root);
+  return randomMove(root);
 }
 
 
@@ -157,4 +158,10 @@ int randomizer(bNode *root, int depth)
     return (heuristic == 0) ? dominating(root, depth) :
            (heuristic == 1) ? selfish(root, depth) :
 	                      calculating(root, depth); 
+}
+
+int gauss(int x, int mean, int stddev)
+{
+  return (int) ((1000000 / (stddev * sqrtf(2 * PI))) * expf(-1 * (powf((float)
+  MODDIST(x, mean), (float) 2))/(2 * powf((float) stddev, (float) 2))));
 }

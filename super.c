@@ -5,6 +5,7 @@
 #include "super.h"
 #include "duel.h"
 #include "stratagy.h"
+#include "toetactic.h"
 
 Table_T termtable;
 
@@ -57,8 +58,11 @@ int queryMove(bNode *root)
 
 int randomOptimal(bNode *root)
 {
+  addMissing(root);
   mNode *mchoice;
   mNode *bestchoice = 0;
+  int bestValue = root->hValue;
+  int p = PLAYDEP(root->depth);
   int randomChoice;
   int bestCounter = 0;
 
@@ -77,10 +81,14 @@ int randomOptimal(bNode *root)
    * so the distribution is entirely uniform.
    */
   for (mchoice = root->choices; mchoice; mchoice = mchoice->next) {
-    if (mchoice->result->hValue == root->hValue) {
-      randomChoice = rand() % (++bestCounter);
-      bestchoice = (randomChoice == 0) ? mchoice : bestchoice;
+    if (p * mchoice->result->hValue < p * bestValue)
+      continue;
+    if (p * mchoice->result->hValue > p * bestValue) {
+      bestValue = mchoice->result->hValue;
+      bestCounter = 0;
     }
+    randomChoice = (int) (random() % (++bestCounter));
+    bestchoice = (randomChoice == 0) ? mchoice : bestchoice;
   }
   return bestchoice->loc;
 }
@@ -161,17 +169,13 @@ int alphabeta(int a, int b, int d, bNode *r, int h(bNode *))
 int main(int argc, char *argv[])
 {
   int gamestate;
-  int playarg;
-
-  if (!(playarg = atoi(argv[1])))
-    playarg = 1;
-
-  const int initplayer = playarg;
+  int initplayer = (argc >= 2) ? atoi(argv[1]) : 1;
+  int primaryplayer = (argc == 3) ? atoi(argv[2]) : 1;
   int player;
   int ended = 0;
   int i;
   int choice;
-  srand((unsigned) time(NULL));
+  srandom(time(NULL) + (getpid() << 16));
   bNode *root;
   bNode *next;
   
@@ -191,12 +195,9 @@ int main(int argc, char *argv[])
 
   for (gamestate = 0, player = 1; !ended && !gamestate; player *= -1) {
 
-    if (initplayer == 1)
-      fprintf(stderr, "*");
-
     if (player == initplayer) {
 
-      if (initplayer == 1)
+      if (initplayer == primaryplayer)
         choice = stratagizer(root, 5);
       else 
         choice = toetactician(root, 5);
@@ -230,16 +231,21 @@ int main(int argc, char *argv[])
 #endif
 
   if (initplayer == 1) {
-    fprintf(stderr, "\n");
     switch (gamestate) {
     case 1:
-      printf("win\n");
+      if (primaryplayer == 1)
+	printf("win\n");
+      else 
+	printf("loss\n");
       break;
     case 0:
       printf("draw\n");
       break;
     case -1:
-      printf("loss\n");
+      if (primaryplayer == -1)
+	printf("win\n");
+      else 
+	printf("loss\n");
       break;
     }
   }
