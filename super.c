@@ -4,10 +4,20 @@
 #include "move.h"
 #include "super.h"
 #include "duel.h"
-#include "stratagy.h"
-#include "toetactic.h"
+#include "gauss.h"
 
 Table_T termtable;
+
+typedef struct {
+  const char *name;
+  int (*func)(bNode *, int);
+} sentry;
+
+sentry stratable[] = {
+  {"cdsSigma", cdsSigma},
+  {0, 0}
+};
+
 
 int queryMove(bNode *root)
 {
@@ -166,15 +176,38 @@ int alphabeta(int a, int b, int d, bNode *r, int h(bNode *))
   }
 }
 
+
+
 int main(int argc, char *argv[])
 {
   int gamestate;
-  int initplayer = (argc >= 2) ? atoi(argv[1]) : 1;
-  int primaryplayer = (argc == 3) ? atoi(argv[2]) : 1;
+  int initplayer;
+  int primaryplayer;
   int player;
   int ended = 0;
   int i;
   int choice;
+  char *strat;
+  sentry *ent;
+  int (*tactic)(bNode *, int) = 0;
+
+  /* usage: game strat [player-number] [reporter] */
+  if (argc < 2)
+    exit(1);
+  strat = argv[1];
+  initplayer = (argc > 2) ? atoi(argv[2]) : 1;
+  primaryplayer = (argc > 3) ? atoi(argv[3]) : 1;
+  
+  for (ent = stratable; ent->name; ++ent) {
+    if (strcmp(ent->name, strat) == 0) {
+      tactic = ent->func;
+      break;
+    }
+  }
+
+  if (tactic == 0)
+    exit(EXIT_FAILURE);
+
   srandom(time(NULL) + (getpid() << 16));
   bNode *root;
   bNode *next;
@@ -196,12 +229,7 @@ int main(int argc, char *argv[])
   for (gamestate = 0, player = 1; !ended && !gamestate; player *= -1) {
 
     if (player == initplayer) {
-
-      if (initplayer == primaryplayer)
-        choice = stratagizer(root, 5);
-      else 
-        choice = toetactician(root, 5);
-
+      choice = tactic(root, 5);
       sendMove(choice);
     } else {
       choice = receiveMove();
@@ -212,7 +240,9 @@ int main(int argc, char *argv[])
     addMissing(next);
 
 #if 0
+    if (initplayer == primaryplayer) {
       printState(next);
+    }
 #endif
 
     root = next;

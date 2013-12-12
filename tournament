@@ -4,9 +4,9 @@ for i in `seq 1 $1`;
 do
 {
  echo -n "$i ";
- ./game 1 >>games.log &
+ CONFPATH="$1" ./game cdsSigma 1 >>games.log &
  pid1=$!
- ./game -1 &
+ CONFPATH="$2" ./game cdsSigma -1 &
  wait $pid1
 }
 done

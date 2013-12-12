@@ -3,6 +3,7 @@
 #include "subgame.h"
 #include "super.h"
 #include "node.h"
+#include "gauss.h"
 
 int null(bNode *root) {
   return (root->depth % 2) ? POSINFTY : NEGINFTY;
@@ -34,7 +35,6 @@ int terminus(bNode *root)
 {
   int i;
   int advantage = 0;
-  int weight[4] = {1,10,10,10};
   subBoard meta = subboardalloc(0);
 
   /* ====Terminal Differential Advantage====
@@ -47,13 +47,18 @@ int terminus(bNode *root)
    * terminal difference of the meta-board is then evaluated.
    */
 
-  for (i = 0; i < 9; ++i)
-    meta[i] = SIGN(terminalDifference(root->state[i]));
+  for (i = 0; i < 9; ++i) {
+    meta[i] = terminalDifference(root->state[i]);
+    if (ABS(meta[i]) >= threshold)
+      meta[i] = SIGN(meta[i]);
+    else
+      meta[i] = 0;
+  }
 
   for (i = 3; i >= 0; --i) {
     advantage += winWays(meta, 1, i);
     advantage -= winWays(meta, -1, i);
-    advantage *= weight[i];
+    advantage *= i ? weight[i-1] : 1;
   }
   return advantage;
 }
@@ -63,7 +68,6 @@ int ownership(bNode *root)
   int advantage = 0;
   int i;
   int j;
-  int weight[4] = {1,10,10,10};
 
   /* ==== Board Ownership Advantage ===
    * Returns the "board ownership advantage" of a descendent over an
@@ -78,13 +82,10 @@ int ownership(bNode *root)
       advantage += winWays(root->state[j], 1, i);
       advantage -= winWays(root->state[j], -1, i);
     }
-    advantage *= weight[i];
+    advantage *= i ? weight[i-1] : 1;
   }
-
   return advantage;
 }
-
-
 
 int selfish(bNode *root, int depth)
 {
@@ -160,8 +161,3 @@ int randomizer(bNode *root, int depth)
 	                      calculating(root, depth); 
 }
 
-int gauss(int x, int mean, int stddev)
-{
-  return (int) ((1000000 / (stddev * sqrtf(2 * PI))) * expf(-1 * (powf((float)
-  MODDIST(x, mean), (float) 2))/(2 * powf((float) stddev, (float) 2))));
-}

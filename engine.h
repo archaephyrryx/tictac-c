@@ -1,3 +1,5 @@
+#ifndef ENGINE_H
+#define ENGINE_H
 #include <unistd.h>
 #include <time.h>
 #include <math.h>
@@ -53,3 +55,4 @@ typedef struct morphism {
   int rotation;
   int reflection;
 } morphism;
+#endif
