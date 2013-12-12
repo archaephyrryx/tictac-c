@@ -60,7 +60,7 @@ int ipcdone(void)
     fatal("waitpid: child neither exited nor terminated");
 }
 
-int receiveMove(void)
+int receiveMove(bNode *root)
 {
     int move = 0;
     int len = sizeof(move);

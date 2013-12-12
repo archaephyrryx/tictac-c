@@ -4,8 +4,8 @@
 #include "node.h"
 #include "heuristics.h"
 
-int threshold;
-int weight[3];
+int threshold = 30;
+int weight[3] = {10, 10, 10};
 
 static int alphabeta(int a, int b, int d, bNode *r, int h(bNode *))
 {

@@ -110,6 +110,8 @@ static void genboards(subBoard root, int hash, int depth, int adv)
 		subinfo[hash].min += subinfo[chash].min;
 	    }
 	    root[i] = 0;
+	    subinfo[hash].max /= (9-depth);
+	    subinfo[hash].min /= (9-depth);
 	}
     }
     printf("%d %d %d %d %d", hash,
