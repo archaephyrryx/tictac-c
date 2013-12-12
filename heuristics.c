@@ -10,7 +10,7 @@ int null(bNode *root) {
 }
 
 int terminalDifference(subBoard state) {
-  terminal *terms = Table_get(termtable, canonBoard(state));
+  terminal *terms = Table_get(termtable, state);
   return (terms->max + terms->min) ? (100 * (terms->max - terms->min))/(terms->max + terms->min) : 0;
 }
 

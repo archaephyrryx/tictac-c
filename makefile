@@ -1,14 +1,19 @@
-CFLAGS = -g -Wall -Werror
+CFLAGS = -O -Wall -Werror
 LDFLAGS = -lm 
 
 COMPONENTS := assert.o except.o mem.o table.o \
               state.o move.o node.o heuristics.o \
-	      subgame.o canon.o duel.o gauss.o
+	      subgame.o canon.o duel.o gauss.o \
+	      uniform.o
 
-all: game
+all: game allboards
 
 game: super.o engine.a 
 	$(CC) $(CFLAGS) super.o engine.a -o game $(LDFLAGS)
+
+allboards: allboards.o engine.a 
+	$(CC) $(CFLAGS) allboards.o engine.a -o allboards $(LDFLAGS)
+
 
 clean:
 	$(RM) -f *.o game engine.a
@@ -26,6 +31,7 @@ node.o: node.c engine.h
 state.o: state.c state.h engine.h
 duel.o: duel.c duel.h
 gauss.o: gauss.c gauss.h engine.h heuristics.h
+uniform.o: uniform.c uniform.h engine.h heuristics.h
 subgame.o: subgame.c
-super.o: super.c engine.h node.h duel.h gauss.h super.h
+super.o: super.c engine.h node.h duel.h gauss.h uniform.h super.h
 table.o: table.c mem.h except.h assert.h

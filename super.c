@@ -5,6 +5,7 @@
 #include "super.h"
 #include "duel.h"
 #include "gauss.h"
+#include "uniform.h"
 
 Table_T termtable;
 
@@ -15,6 +16,7 @@ typedef struct {
 
 sentry stratable[] = {
   {"cdsSigma", cdsSigma},
+  {"cdsScalar", cdsScalar},
   {0, 0}
 };
 
@@ -68,7 +70,6 @@ int queryMove(bNode *root)
 
 int randomOptimal(bNode *root)
 {
-  addMissing(root);
   mNode *mchoice;
   mNode *bestchoice = 0;
   int bestValue = root->hValue;
@@ -182,7 +183,7 @@ int main(int argc, char *argv[])
 {
   int gamestate;
   int initplayer;
-  int primaryplayer;
+  int report;
   int player;
   int ended = 0;
   int i;
@@ -190,13 +191,15 @@ int main(int argc, char *argv[])
   char *strat;
   sentry *ent;
   int (*tactic)(bNode *, int) = 0;
+  bNode *root;
+  bNode *next;
 
   /* usage: game strat [player-number] [reporter] */
   if (argc < 2)
     exit(1);
   strat = argv[1];
   initplayer = (argc > 2) ? atoi(argv[2]) : 1;
-  primaryplayer = (argc > 3) ? atoi(argv[3]) : 1;
+  report = (argc > 3) ? atoi(argv[3]) : (initplayer == 1);
   
   for (ent = stratable; ent->name; ++ent) {
     if (strcmp(ent->name, strat) == 0) {
@@ -209,9 +212,8 @@ int main(int argc, char *argv[])
     exit(EXIT_FAILURE);
 
   srandom(time(NULL) + (getpid() << 16));
-  bNode *root;
-  bNode *next;
-  
+
+  initstakes();
   root = bNodealloc();
   root->state = boardalloc(0);
   root->meta = subboardalloc(0);
@@ -231,16 +233,15 @@ int main(int argc, char *argv[])
     if (player == initplayer) {
       choice = tactic(root, 5);
       sendMove(choice);
+      next = locToNode(root, choice);
     } else {
       choice = receiveMove();
+      next = locToNode(root, choice);
+      addMissing(next);
     }
-    
-    next = locToNode(root, choice);
-
-    addMissing(next);
 
 #if 0
-    if (initplayer == primaryplayer) {
+    if (initplayer == 1) {
       printState(next);
     }
 #endif
@@ -260,22 +261,15 @@ int main(int argc, char *argv[])
   printState(root);
 #endif
 
-  if (initplayer == 1) {
-    switch (gamestate) {
+  if (report) {
+    switch (gamestate * initplayer) {
     case 1:
-      if (primaryplayer == 1)
-	printf("win\n");
-      else 
-	printf("loss\n");
-      break;
+      printf("win\n");
     case 0:
       printf("draw\n");
       break;
     case -1:
-      if (primaryplayer == -1)
-	printf("win\n");
-      else 
-	printf("loss\n");
+      printf("loss\n");
       break;
     }
   }

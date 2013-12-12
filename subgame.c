@@ -2,6 +2,36 @@
 #include "engine.h"
 #include "subgame.h"
 
+static int paths[54];
+ 
+void initstakes(void) {
+  int a;
+  int b;
+  int c;
+  int p;
+
+  for (p = -1; p < 2; p += 2) {
+    for (a = -1; a < 2; ++a) {
+      for (b = -1; b < 2; ++b) {
+	for (c = -1; c < 2; ++c) {
+	  int i = 27*(p+1)/2 + 9*(a+1) + 3*(b+1) + (c+1);
+	  /*
+	   * For three positions along a win-vector, the sum of the pair-wise
+	   * products of their values is negative if two positions have opposite
+	   * values (+1 and -1). If all values are 0 or a single player value,
+	   * then this evaluation is greater than or equal to 0.
+	   */
+	  if ((a * b + b * c + c * a >= 0) && (p * (a + b + c) >= 0)) {
+	    paths[i] = p * (a + b + c);
+	  } else {
+	    paths[i] = -1;
+	  }
+	}
+      }
+    }
+  }
+}
+ 
 int countOpen(subBoard state) {
   int i;
   int count = 0;
@@ -14,54 +44,29 @@ int countOpen(subBoard state) {
   return count;
 }
 
+
 void makeTermTable(Table_T termtable)
 {
-  subBoard root = subboardalloc(0);
-  terminalTable(termtable, root); 
+  char buf[MAXLINE];
+  FILE *allboards = fopen("allboards.dat", "r");
+  if (allboards == NULL)
+    exit(EXIT_FAILURE);
+
+  while (fgets(buf, sizeof(buf), allboards)) {
+    subBoard board = subboardalloc(0);
+    terminal *terms = (terminal *) malloc(sizeof(terminal));
+
+    if (sscanf(buf, "%d %d %d %d %d %d %d %d %d %d %d", &terms->max, &terms->min,
+		     &board[0], &board[1], &board[2], &board[3], &board[4],
+		     &board[5], &board[6], &board[7], &board[8]) != 11) {
+      exit(EXIT_FAILURE);
+    }
+    Table_put(termtable, board, terms);
+  }
 }
 
-terminal *terminalTable(Table_T termtable, subBoard state)
-{
-  int player;
-  int i;
-  int w;
-  int *canon = canonBoard(state);
-  terminal *terms;
-
-  if ((terms = Table_get(termtable, canon)) != 0) {
-    free(canon);
-    return terms;
-  }
-
-  terms = (terminal *) calloc(1, sizeof(terminal));
-
-  if ((w = win(state)) != 0) {
-    terms->max = (w == 1) ? 1 : 0;
-    terms->min = (w == -1) ? 1 : 0;
-  } else if (countOpen(state) == 0) {
-    terms->max = 0;
-    terms->min = 0;
-  } else {
-    int childState[9];
-    memcpy(childState, state, 9*sizeof(int));
-
-    for (i = 0; i < 9; ++i) {
-      if (childState[i] == 0) {
-	for (player = 0; player < 2; ++player) {
-	  childState[i] = (2*player) - 1;
-	  terminal *childterm = terminalTable(termtable, childState);
-	  terms->max += childterm->max;
-	  terms->min += childterm->min;
-	}
-	childState[i] = 0;
-      }
-    }
-  }
-  Table_put(termtable, canon, terms);
-  return terms;
-} 
- 
-int stakes(subBoard state, int i, int j, int k, int player) {
+#if 0
+static int stakes(subBoard state, int i, int j, int k, int player) {
   int a = state[i];
   int b = state[j];
   int c = state[k];
@@ -72,21 +77,31 @@ int stakes(subBoard state, int i, int j, int k, int player) {
   }
   return -1;
 }
+#endif
  
 int winWays(subBoard state, int player, int owned)
 {
   int count = 0;
+  register int p = 27*((player + 1)>>1);
+
+#define docount(i, j, k) \
+      do { \
+      	register int _a = state[i] + 1; \
+      	register int _b = state[j] + 1; \
+      	register int _c = state[k] + 1; \
+	count += (paths[p + (_a<<3) + _a + (_b<<1) + _b + _c] == owned); \
+      } while (0)
 
   /* Counts the number of win vectors that a player owns a certain number of
    * positions along */
-  count += (stakes(state, 0, 4, 8, player) == owned);
-  count += (stakes(state, 2, 4, 6, player) == owned);
-  count += (stakes(state, 0, 3, 6, player) == owned);
-  count += (stakes(state, 1, 4, 7, player) == owned);
-  count += (stakes(state, 2, 5, 8, player) == owned);
-  count += (stakes(state, 0, 1, 2, player) == owned);
-  count += (stakes(state, 3, 4, 5, player) == owned);
-  count += (stakes(state, 6, 7, 8, player) == owned);
+  docount(0, 4, 8);
+  docount(2, 4, 6);
+  docount(0, 3, 6);
+  docount(1, 4, 7);
+  docount(2, 5, 8);
+  docount(0, 1, 2);
+  docount(3, 4, 5);
+  docount(6, 7, 8);
 
   return count;
 }

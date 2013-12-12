@@ -1,12 +1,30 @@
 #! /bin/bash
 
-for i in `seq 1 $1`;
+echo "-$2" >>"$1".log
+echo "+$1" >>"$2".log
+
+for i in $(seq 1 $5);
 do
 {
- echo -n "$i ";
- CONFPATH="$1" ./game cdsSigma 1 >>games.log &
+ echo "$i";
+ CONFPATH="$1" ./game "$3" 1 1 >>"$1".log &
  pid1=$!
- CONFPATH="$2" ./game cdsSigma -1 &
+ CONFPATH="$2" ./game "$4" -1 -1 >>"$2".log &
+ wait $pid1
+}
+done
+
+echo "+$2" >>"$1".log
+echo "-$1" >>"$2".log
+
+
+for i in $(seq 1 $5);
+do
+{
+ echo "$i";
+ CONFPATH="$1" ./game "$3" -1 -1 >>"$1".log &
+ pid1=$!
+ CONFPATH="$2" ./game "$4" 1 1 >>"$2".log &
  wait $pid1
 }
 done
