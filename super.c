@@ -185,7 +185,9 @@ int main( char *args )
   for (gamestate = 0, player = 1; gamestate == 0 && root->depth < 81; player *= -1) {
     printState(root->state);
     if (player == 1) {
-      choice = dominating(root, 0); 
+      choice = calculating(root, 4); 
+      // choice = dominating(root, 4); 
+      // nchoice = selfish(root, 4); 
       next = locToNode(root, choice);
     } else {
       addMissing(root);

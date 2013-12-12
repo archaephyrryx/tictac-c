@@ -52,7 +52,7 @@ int ownership(board state)
   int advantage = 0;
   int i;
   int j;
-  int weight[4] = {1,9,8,7};
+  int weight[4] = {1,10,10,10};
 
   /* ==== Board Ownership Advantage ===
    * Returns the "board ownership advantage" of a descendent over an
@@ -62,12 +62,12 @@ int ownership(board state)
    * board; the weight indicates how many vectors underfilled by one are equal
    * to one filled vector.
    */
-  for (i = 0; i < 9; ++i) {
-    for (j = 3; j >= 0; --j) {
-      advantage += winWays(state[i], 1, j);
-      advantage -= winWays(state[i], -1, j);
-      advantage *= weight[j];
+  for (i = 3; i >= 0; --i) {
+    for (j = 0; j < 9; ++j) {
+      advantage += winWays(state[j], 1, i);
+      advantage -= winWays(state[j], -1, i);
     }
+    advantage *= weight[i];
   }
 
   return advantage;
