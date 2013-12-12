@@ -2,10 +2,23 @@
 #include "engine.h"
 #include "subgame.h"
 
+static int countOpen(subBoard state) {
+  int i;
+  int count = 0;
+
+  for (i = 0; i < 9; ++i) {
+    if (state[i] == 0) {
+      ++count;
+    }
+  }
+  return count;
+}
+
 void makeTermTable(Table_T termtable)
 {
   subBoard root = subboardalloc(0);
   terminalTable(termtable, root); 
+  fflush(stderr);
 }
 
 terminal *terminalTable(Table_T termtable, subBoard state)
@@ -21,7 +34,7 @@ terminal *terminalTable(Table_T termtable, subBoard state)
     return terms;
   }
 
-  terms = (terminal *) malloc(sizeof(terminal));
+  terms = (terminal *) calloc(1, sizeof(terminal));
 
   if ((w = win(state)) != 0) {
     terms->max = (w == 1) ? 1 : 0;
@@ -34,16 +47,18 @@ terminal *terminalTable(Table_T termtable, subBoard state)
     memcpy(childState, state, 9*sizeof(int));
 
     for (i = 0; i < 9; ++i) {
-      if (state[i] == 0) {
+      if (childState[i] == 0) {
 	for (player = 0; player < 2; ++player) {
 	  childState[i] = (2*player) - 1;
 	  terminal *childterm = terminalTable(termtable, childState);
 	  terms->max += childterm->max;
 	  terms->min += childterm->min;
 	}
+	childState[i] = 0;
       }
     }
   }
+  fprintf(stderr, "%d\n", boardhash(canon));
   Table_put(termtable, canon, terms);
   return terms;
 } 
@@ -125,14 +140,3 @@ subBoard metaState(board state)
   return metastate;
 }
 
-int countOpen(subBoard state) {
-  int i;
-  int count = 0;
-
-  for (i = 0; i < 9; ++i) {
-    if (state[i] == 0) {
-      ++count;
-    }
-  }
-  return count;
-}

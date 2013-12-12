@@ -1,4 +1,3 @@
-static char rcsid[] = "$Id: except.c 6 2007-01-22 00:45:22Z drhanson $" "\n$Id: except.c 6 2007-01-22 00:45:22Z drhanson $";
 #include <stdlib.h>
 #include <stdio.h>
 #include "assert.h"

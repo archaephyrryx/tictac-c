@@ -1,7 +1,6 @@
 #include "engine.h"
 #include "heuristics.h"
-
-Table_T termtable;
+#include "super.h"
 
 int terminalDifference(subBoard state) {
   terminal *terms = Table_get(termtable, canonBoard(state));
@@ -29,6 +28,10 @@ int advantage(board state)
 int terminus(board state)
 {
   int i;
+  int advantage = 0;
+  int weight[4] = {1,10,10,10};
+  subBoard meta = metaState(state);
+
   /* ====Terminal Differential Advantage====
    * Returns the "terminal differential advantage" of a board:
    * the terminal differential advantage is calculated by evaluating
@@ -39,12 +42,16 @@ int terminus(board state)
    * terminal difference of the meta-board is then evaluated.
    */
 
-  subBoard meta = subboardalloc(0);
 
   for (i = 0; i < 9; ++i)
     meta[i] = SIGN(terminalDifference(state[i]));
 
-  return terminalDifference(meta);
+  for (i = 3; i >= 0; --i) {
+    advantage += winWays(meta, 1, i);
+    advantage -= winWays(meta, -1, i);
+    advantage *= weight[i];
+  }
+  return advantage;
 }
 
 int ownership(board state)

@@ -1,3 +1,4 @@
+#include "state.h"
 #define SUBBOARDS 20000
 #ifndef CANON_H
 #define CANON_H

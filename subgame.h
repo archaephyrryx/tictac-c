@@ -1,4 +1,3 @@
-#include "table.h"
 #include "state.h"
 #include "canon.h"
 #ifndef SUBGAME_H

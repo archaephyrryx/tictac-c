@@ -1,3 +1,4 @@
+#include <time.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -15,6 +16,9 @@
 /* Player Identification */
 #define PLAYDEP(x) (1 + -2 * ((x) % 2))
 #define SIGN(x) ((x < 0) ? -1 : (x > 0))
+
+/* The Terminal Table */
+extern Table_T termtable;
 
 typedef int *subBoard;
 typedef int (*board)[9];

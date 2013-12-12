@@ -1,4 +1,3 @@
-static char rcsid[] = "$Id: table.c 6 2007-01-22 00:45:22Z drhanson $";
 #include <limits.h>
 #include <stddef.h>
 #include "mem.h"

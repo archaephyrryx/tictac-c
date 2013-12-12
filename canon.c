@@ -1,5 +1,4 @@
 #include "engine.h"
-#include "state.h"
 #include "canon.h"
 
 void rotate(subBoard state)

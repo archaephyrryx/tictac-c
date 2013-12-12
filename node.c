@@ -1,9 +1,8 @@
-#include <stdlib.h>
-
 #include "engine.h"
 #include "state.h"
 #include "subgame.h"
 #include "node.h"
+#include "move.h"
 
 bNode *bNodealloc(void)
 {
@@ -60,16 +59,35 @@ void addMissing(bNode *root)
 {
   int loc;
   int last = root->lastMove;
-  int moves = 0;
   board mState = boardalloc(0);
   subBoard meta = metaState(root->state);
  
   for (loc = 0; loc < 81; ++loc) {
+    /*
+     * If the board is at depth zero, then it is completely empty and all moves
+     * are valid
+     */
     if (root->depth > 0) {
-      if ((isValid(meta, last%9) && loc/9 != last%9) || !(isValid(root->state, loc))) {
-	continue;
-      }
+      /*
+       * If the board referenced by the last move is valid, and the board that
+       * our move is on is not that board, we continue
+       */
+      if (isValid(meta, last%9) && (loc/9 != last%9))
+        continue;
+     
+      /*
+       * If the board our move is on has been won, we continue
+       */
+      if (!(isValid(meta, loc/9)))
+        continue;
+
+      /*
+       * If our move is not empty, we continue
+       */
+      if (!(isValid(root->state[loc/9], loc%9)))
+        continue;
     }
+
     if (hasMove(root, loc)) {
       continue;
     } else {

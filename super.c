@@ -1,7 +1,10 @@
 #include "engine.h"
-#include "state.h"
-#include "node.h"
 #include "heuristics.h"
+#include "node.h"
+#include "move.h"
+#include "super.h"
+
+Table_T termtable;
 
 int queryMove(board state)
 {
@@ -59,7 +62,6 @@ int randomOptimal(bNode *root)
   mNode *bestchoice;
   int randomChoice;
   int bestCounter = 0;
-  int player = PLAYDEP(root->depth);
 
   /* One-pass algorithm for randomly selecting a move that is optimal (best
    * heuristic value) as follows: the current move node is sub-optimal
@@ -161,31 +163,33 @@ int alphabeta(int a, int b, int d, bNode *r, int h(board))
         break;
     }
     return (r->hValue = b);
+  } else {
+    abort();
   }
+
 }
 
-int main( char *args )
+int main(int argc, char *argv[])
 {
   int gamestate;
   int player;
   int choice;
-  board outcome = boardalloc(0);
   srand((unsigned) time(NULL));
   bNode *root;
   bNode *next;
   
   root = bNodealloc();
   root->state = boardalloc(0);
-  printState(root->state);
 
-  Table_T termtable = Table_new(SUBBOARDS, boardcmp, boardhash);
+  termtable = Table_new(SUBBOARDS, boardcmp, boardhash);
   makeTermTable(termtable);
+
   root = build(root, 2);
 
   for (gamestate = 0, player = 1; gamestate == 0 && root->depth < 81; player *= -1) {
     printState(root->state);
     if (player == 1) {
-      choice = calculating(root, 4); 
+      choice = calculating(root, 6); 
       // choice = dominating(root, 4); 
       // nchoice = selfish(root, 4); 
       next = locToNode(root, choice);
