@@ -4,6 +4,32 @@
 #include "node.h"
 #include "move.h"
 
+bNode *bNodefree(bNode *root, int loc)
+{
+  bNode *next = 0;
+  mNode *mchoice;
+#ifdef FREEBNODES
+  mNode *mnext;
+
+  for (mchoice = root->choices; mchoice; mchoice = mnext) {
+    mnext = mchoice->next;
+    if (mchoice->loc == loc)
+      next = mchoice->result;
+    else
+      (void) bNodefree(mchoice->result, -1);
+    free(mchoice);
+  }
+  free(root->meta);
+  free(root->state);
+  free(root);
+#else
+  for (mchoice = root->choices; mchoice; mchoice = mchoice->next)
+    if (mchoice->loc == loc)
+      return mchoice->result;
+#endif
+  return next;
+}
+
 bNode *bNodealloc(void)
 {
   bNode *node = (bNode *) malloc(sizeof(bNode));
@@ -63,8 +89,6 @@ void addMissing(bNode *root)
   int start;
   int end;
   int i;
-  board mState = boardalloc(0);
- 
 
   if (root->depth == 0) {
     start = 0;
@@ -81,8 +105,6 @@ void addMissing(bNode *root)
     end = 8;
   }
 
-
-
   for (i = start; i <= end; ++i) {
     if (isValid(root->meta, i)) {
       for (loc = 9 * i; loc/9 == i; ++loc) {
@@ -91,25 +113,22 @@ void addMissing(bNode *root)
         if (hasMove(root, loc))
 	  continue;
 
-	boardcpy(mState, root->state);
 	mNode *mchoice = mNodealloc();
 	mchoice->loc = loc;
 
 	mchoice->next = root->choices;
 	root->choices = mchoice;
 
-	applyMove(loc, mState, PLAYDEP(root->depth));
 	mchoice->result = bNodealloc();
 	mchoice->result->lastMove = loc;
-	mchoice->result->state = boardalloc(mState);
+	mchoice->result->state = boardalloc(root->state);
+	applyMove(loc, mchoice->result->state, PLAYDEP(root->depth));
 	mchoice->result->meta = subboardalloc(root->meta);
 	mchoice->result->meta[i] = win(mchoice->result->state[i]);
 	mchoice->result->depth = root->depth + 1;
       }
     }
   }
-
-  free(mState);
 }
 
 static int maxmovecmp(const void *a, const void *b)

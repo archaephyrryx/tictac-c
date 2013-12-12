@@ -11,12 +11,15 @@ all: game allboards
 game: super.o engine.a 
 	$(CC) $(CFLAGS) super.o engine.a -o game $(LDFLAGS)
 
+gamepg: super.o engine.a 
+	$(CC) -pg $(CFLAGS) super.o engine.a -o gamepg $(LDFLAGS)
+
 allboards: allboards.o engine.a 
 	$(CC) $(CFLAGS) allboards.o engine.a -o allboards $(LDFLAGS)
 
 
 clean:
-	$(RM) -f *.o game engine.a
+	$(RM) -f *.o allboards engine.a
 
 engine.a: $(COMPONENTS)
 	ar cr engine.a $(COMPONENTS)

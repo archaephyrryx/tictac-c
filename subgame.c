@@ -81,25 +81,28 @@ static int stakes(subBoard state, int i, int j, int k, int player) {
  
 int winWays(subBoard state, int player, int owned)
 {
-  int count = 0;
-  register int p = 27*((player + 1)>>1);
+  static int _pmap[] = {0, 0, 27};
+  static int _amap[] = {0, 9, 18};
+  static int _bmap[] = {0, 3, 6};
+  register int _p = _pmap[player + 1];
+  register int count = 0;
 
 #define docount(i, j, k) \
       do { \
-      	register int _a = state[i] + 1; \
-      	register int _b = state[j] + 1; \
-      	register int _c = state[k] + 1; \
-	count += (paths[p + (_a<<3) + _a + (_b<<1) + _b + _c] == owned); \
+      	register int _i = _amap[state[i] + 1]; \
+      	_i += _bmap[state[j] + 1]; \
+      	_i += state[k] + 1; \
+	count += (paths[_p + _i] == owned); \
       } while (0)
 
   /* Counts the number of win vectors that a player owns a certain number of
    * positions along */
-  docount(0, 4, 8);
-  docount(2, 4, 6);
-  docount(0, 3, 6);
-  docount(1, 4, 7);
-  docount(2, 5, 8);
   docount(0, 1, 2);
+  docount(0, 3, 6);
+  docount(0, 4, 8);
+  docount(1, 4, 7);
+  docount(2, 4, 6);
+  docount(2, 5, 8);
   docount(3, 4, 5);
   docount(6, 7, 8);
 

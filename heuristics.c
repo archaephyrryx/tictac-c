@@ -35,7 +35,7 @@ int terminus(bNode *root)
 {
   int i;
   int advantage = 0;
-  subBoard meta = subboardalloc(0);
+  int meta[9];
 
   /* ====Terminal Differential Advantage====
    * Returns the "terminal differential advantage" of a board:

@@ -233,12 +233,13 @@ int main(int argc, char *argv[])
     if (player == initplayer) {
       choice = tactic(root, 5);
       sendMove(choice);
-      next = locToNode(root, choice);
     } else {
       choice = receiveMove();
-      next = locToNode(root, choice);
-      addMissing(next);
     }
+
+    next = bNodefree(root, choice);
+    if (player == initplayer)
+      addMissing(next);
 
 #if 0
     if (initplayer == 1) {
@@ -261,10 +262,13 @@ int main(int argc, char *argv[])
   printState(root);
 #endif
 
+  bNodefree(root, -1);
+
   if (report) {
     switch (gamestate * initplayer) {
     case 1:
       printf("win\n");
+      break;
     case 0:
       printf("draw\n");
       break;
