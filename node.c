@@ -109,7 +109,8 @@ void sortMoves(bNode *root)
   mNode *mchoice;
   root->choices = NULL;
 
-  for (i = 0; (mchoice = moves[i]); ++i) {
+  for (i = 0; i < nelem; ++i) {
+    mchoice = moves[i];
     mchoice->next = root->choices; 
     root->choices = mchoice;
   }

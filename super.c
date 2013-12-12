@@ -133,9 +133,8 @@ int alphabeta(int a, int b, int d, bNode *r, int h(board))
   mNode *mchoice;
 
   /* Max depth reached */
-  if (d == -1 || win(metaState(r->state))) {
+  if (d == -1 || win(metaState(r->state)))
     return (r->hValue = h(r->state));
-  }
 
   /* add any uncomputed moves, sort the moves by hValue */
   addMissing(r);
@@ -145,21 +144,21 @@ int alphabeta(int a, int b, int d, bNode *r, int h(board))
   if (p == 1) {
     for (mchoice = r->choices; mchoice; mchoice = mchoice->next) {
       bNode *child = mchoice->result;
+      int tmp = alphabeta(a, b, d-1, child, h);
 
-      a = MAX(a, alphabeta(a, b, d-1, child, h));
-      if (b <= a) {
+      a = MAX(a, tmp);
+      if (b <= a)
 	break;
-      }
     }
     return (r->hValue = a);
   } if (p == -1) {
     for (mchoice = r->choices; mchoice; mchoice = mchoice->next) {
       bNode *child = mchoice->result;
+      int tmp = alphabeta(a, b, d-1, child, h);
 
-      b = MIN(b, alphabeta(a, b, d-1, child, h));
-      if (b <= a) {
+      b = MIN(b, tmp);
+      if (b <= a)
         break;
-      }
     }
     return (r->hValue = b);
   }
@@ -173,6 +172,7 @@ int main( char *args )
   board outcome = boardalloc(0);
   srand((unsigned) time(NULL));
   bNode *root;
+  bNode *next;
   
   root = bNodealloc();
   root->state = boardalloc(0);
@@ -186,12 +186,16 @@ int main( char *args )
     printState(root->state);
     if (player == 1) {
       choice = dominating(root, 0); 
+      next = locToNode(root, choice);
     } else {
-      choice = queryMove(root->state);
       addMissing(root);
+      do {
+	choice = queryMove(root->state);
+	next = locToNode(root, choice);
+      } while (next == NULL);
     }
     
-    root = locToNode(root, choice);
+    root = next;
     gamestate = win(metaState(root->state));
   }
   printState(root->state);

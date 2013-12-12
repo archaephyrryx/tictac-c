@@ -10,14 +10,11 @@ void makeTermTable(Table_T termtable)
 
 terminal *terminalTable(Table_T termtable, subBoard state)
 {
-  static int when = 0;
   int player;
   int i;
   int w;
   int *canon = canonBoard(state);
   terminal *terms;
-
-  fprintf(stderr, "%10d\r", ++when);
 
   if ((terms = Table_get(termtable, canon)) != 0) {
     free(canon);
@@ -65,8 +62,7 @@ int stakes(subBoard state, int i, int j, int k, int player) {
  
 int winWays(subBoard state, int player, int owned)
 {
-  int count;
-  int i; int j; int k;
+  int count = 0;
 
   /* Counts the number of win vectors that a player owns a certain number of
    * positions along */
