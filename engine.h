@@ -37,6 +37,7 @@ typedef struct bNode {
   int depth;
   int hValue;
   board state;
+  subBoard meta;
   int lastMove;
   struct mNode *choices;
 } bNode;

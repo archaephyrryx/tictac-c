@@ -1,5 +1,6 @@
 #include "engine.h"
 #include "move.h"
+
 int isValid(subBoard state, int index) {
   return (state[index] == 0);
 }

@@ -1,0 +1,12 @@
+#! /bin/bash
+
+for i in `seq 1 $1`;
+do
+{
+ echo -n "$i ";
+ ./game 1 >>games.log &
+ pid1=$!
+ ./game -1 &
+ wait $pid1
+}
+done
