@@ -60,13 +60,10 @@ void addMissing(bNode *root)
   int loc;
   int last = root->lastMove;
   board mState = boardalloc(0);
-  subBoard meta = metaState(root->state);
+  subBoard meta = metaState(root->state, -2);
  
   for (loc = 0; loc < 81; ++loc) {
-    /*
-     * If the board is at depth zero, then it is completely empty and all moves
-     * are valid
-     */
+    /* * If the board is at depth zero, then it is completely empty and all moves are valid */
     if (root->depth > 0) {
       /*
        * If the board referenced by the last move is valid, and the board that
@@ -76,7 +73,7 @@ void addMissing(bNode *root)
         continue;
      
       /*
-       * If the board our move is on has been won, we continue
+       * If the board our move is on has been won or filled, we continue
        */
       if (!(isValid(meta, loc/9)))
         continue;
@@ -107,9 +104,17 @@ void addMissing(bNode *root)
     }
   }
   free(mState);
+  free(meta);
 }
 
-static int movecmp(const void *a, const void *b)
+static int minmovecmp(const void *a, const void *b)
+{
+  mNode *m1 = *(mNode **)a;
+  mNode *m2 = *(mNode **)b;
+  return (m2->result->hValue - m1->result->hValue);
+}
+
+static int maxmovecmp(const void *a, const void *b)
 {
   mNode *m1 = *(mNode **)a;
   mNode *m2 = *(mNode **)b;
@@ -121,8 +126,17 @@ void sortMoves(bNode *root)
   int i;
   size_t nelem;
   mNode **moves = gather(root, &nelem);
+  
+  if (root->depth % 0) {
+    qsort(moves, nelem, sizeof(mNode *), maxmovecmp); 
+  } else {
+    qsort(moves, nelem, sizeof(mNode *), minmovecmp); 
+  }
 
-  qsort(moves, nelem, sizeof(mNode *), movecmp); 
+
+
+
+  qsort(moves, nelem, sizeof(mNode *), (PLAYDEP(root->depth) * movecmp)); 
 
   mNode *mchoice;
   root->choices = NULL;

@@ -1,4 +1,5 @@
 #include <time.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -16,6 +17,10 @@
 /* Player Identification */
 #define PLAYDEP(x) (1 + -2 * ((x) % 2))
 #define SIGN(x) ((x < 0) ? -1 : (x > 0))
+
+#define ABS(x) ((x < 0) ? -1 * x : x)
+#define PI (3.141592653589793)
+#define MODDIST(x,y) (MIN(( ABS((x - y) % 81) ), ( ABS( 81 -((x - y) % 81)) )))
 
 /* The Terminal Table */
 extern Table_T termtable;
@@ -46,3 +51,4 @@ typedef struct morphism {
   int rotation;
   int reflection;
 } morphism;
+

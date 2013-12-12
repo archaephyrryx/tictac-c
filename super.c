@@ -3,6 +3,7 @@
 #include "node.h"
 #include "move.h"
 #include "super.h"
+#include "duel.h"
 
 Table_T termtable;
 
@@ -43,10 +44,18 @@ int queryMove(board state)
     if (move[0] > 8 || move[1] > 8) {
       printf("Indicated position out of bounds.\n");
       continue;
-    } else if (!(isValid(metaState(state), move[0]))) {
+    }
+    
+    subBoard meta = metaState(state, -2);
+    int valid = isValid(meta, move[0]);
+    free(meta);
+
+    if (!valid) {
       printf("Indicated board cannot be selected.\n");
       continue;
-    } else if (!(isValid(state[move[0]], move[1]))) {
+    }
+
+    if (!(isValid(state[move[0]], move[1]))) {
       printf("Indicated position cannot be selected.\n");
       continue;
     } else {
@@ -59,7 +68,7 @@ int queryMove(board state)
 int randomOptimal(bNode *root)
 {
   mNode *mchoice;
-  mNode *bestchoice;
+  mNode *bestchoice = 0;
   int randomChoice;
   int bestCounter = 0;
 
@@ -86,25 +95,29 @@ int randomOptimal(bNode *root)
   return bestchoice->loc;
 }
 
-void printState(board state)
+void printState(bNode *root)
 {
   int i;
   int j;
   int k;
   int l;
-  char markers[3] = {'O','.','X'};
+  char markers[3] = {'O','!','X'};
 
   /* Prints the board on the screen, in three lines of three digits */
   printf("------------------------------\n");
   for (i = 0; i < 3; ++i) {
     for (k = 0; k < 3; ++k) {
       for (j = 0; j < 3; ++j) {
-	for (l = 0; l < 3; ++l) {
-	  printf(" %c ", markers[state[3*i + j][3*k + l] + 1]);
-	}
 	printf("|");
+	for (l = 0; l < 3; ++l) {
+	  if (hasMove(root, (27 * i + 9 * j + 3 * k + l))) {
+	    printf(" . ");
+	  } else {
+	    printf(" %c ", markers[root->state[3*i + j][3*k + l] + 1]);
+	  }
+	}
       }
-    printf("\n");
+    printf("|\n");
     }
     printf("------------------------------\n");
   }
@@ -135,7 +148,14 @@ int alphabeta(int a, int b, int d, bNode *r, int h(board))
   mNode *mchoice;
 
   /* Max depth reached */
-  if (d == -1 || win(metaState(r->state)))
+  if (d == -1)
+    return (r->hValue = h(r->state));
+
+  subBoard meta = metaState(r->state, 0);
+  int w = win(meta);
+  free(meta);
+
+  if (r->depth == 81 || w)
     return (r->hValue = h(r->state));
 
   /* add any uncomputed moves, sort the moves by hValue */
@@ -172,7 +192,9 @@ int alphabeta(int a, int b, int d, bNode *r, int h(board))
 int main(int argc, char *argv[])
 {
   int gamestate;
-  int player;
+  int initplayer = atoi(argv[1]);
+  int ended = 0;
+  int i;
   int choice;
   srand((unsigned) time(NULL));
   bNode *root;
@@ -186,25 +208,44 @@ int main(int argc, char *argv[])
 
   root = build(root, 2);
 
-  for (gamestate = 0, player = 1; gamestate == 0 && root->depth < 81; player *= -1) {
-    printState(root->state);
-    if (player == 1) {
-      choice = calculating(root, 6); 
-      // choice = dominating(root, 4); 
-      // nchoice = selfish(root, 4); 
-      next = locToNode(root, choice);
+  if (initplayer == 1)
+    invite();
+  else
+    join();
+
+  for (gamestate = 0; player = initplayer; !ended && !gamestate; player *= -1) {
+
+    if (player == initplayer) {
+      choice = stratagizer(root, 5);
+      sendMove(choice);
     } else {
-      addMissing(root);
+      choice = receiveMove();
+#if 0
+      choice = nullius(root, 0);
       do {
 	choice = queryMove(root->state);
 	next = locToNode(root, choice);
       } while (next == NULL);
+#endif
     }
     
+    next = locToNode(root, choice);
+    addMissing(next);
+    printState(next);
     root = next;
-    gamestate = win(metaState(root->state));
+    
+    ended = 1;
+    for (i = 0; i < 9 && ended; ++i)
+      if (countOpen(next->state[i]) && !(win(next->state[i])))
+        ended = 0;
+
+    if (!ended) {
+      subBoard meta = metaState(root->state, 0);
+      gamestate = win(meta);
+      free(meta);
+    }
   }
-  printState(root->state);
+  printState(root);
 
   switch (gamestate) {
   case -1:

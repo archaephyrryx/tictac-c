@@ -2,7 +2,7 @@
 #include "engine.h"
 #include "subgame.h"
 
-static int countOpen(subBoard state) {
+int countOpen(subBoard state) {
   int i;
   int count = 0;
 
@@ -18,7 +18,6 @@ void makeTermTable(Table_T termtable)
 {
   subBoard root = subboardalloc(0);
   terminalTable(termtable, root); 
-  fflush(stderr);
 }
 
 terminal *terminalTable(Table_T termtable, subBoard state)
@@ -58,7 +57,6 @@ terminal *terminalTable(Table_T termtable, subBoard state)
       }
     }
   }
-  fprintf(stderr, "%d\n", boardhash(canon));
   Table_put(termtable, canon, terms);
   return terms;
 } 
@@ -127,15 +125,21 @@ int win(subBoard state)
   return 0;
 }
 
-subBoard metaState(board state)
+subBoard metaState(board state, int fillValue)
 {
   int i;
   subBoard metastate = subboardalloc(0);
 
   /* produces a sub-board containing the win-states of the respective sub-boards
-   * on the large board */
+   * on the large board. If a board is completely filled, then the value is the
+   * argument fillValue. This is to distinguish between evaluations of whether
+   * the game has been won, and evaluations of whether a board is still open for
+   * moves. */
   for (i = 0; i < 9; ++i) {
-    metastate[i] = win(state[i]);
+    if ((metastate[i] = win(state[i])) == 0 &&
+        countOpen(state[i]) == 0 && fillValue != 0) {
+    metastate[i] = fillValue;
+    }
   }
   return metastate;
 }
